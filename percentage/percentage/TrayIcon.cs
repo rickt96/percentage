@@ -14,6 +14,7 @@ namespace percentage
         private const int iconFontSize = 14;
 
         private string batteryPercentage;
+        private bool batteryCharging;
         private NotifyIcon notifyIcon;
 
         public TrayIcon()
@@ -46,9 +47,14 @@ namespace percentage
         private void timer_Tick(object sender, EventArgs e)
         {
             PowerStatus powerStatus = SystemInformation.PowerStatus;
+
+            batteryCharging = powerStatus.PowerLineStatus == PowerLineStatus.Online;
             batteryPercentage = (powerStatus.BatteryLifePercent * 100).ToString();
 
-            using (Bitmap bitmap = new Bitmap(DrawText(batteryPercentage, new Font(iconFont, iconFontSize), Color.White, Color.Black)))
+            Color backColor = GetBackColor(batteryPercentage);
+            Color textColor = GetFontColor(backColor);
+
+            using (Bitmap bitmap = new Bitmap(DrawText(batteryPercentage, new Font(iconFont, iconFontSize), textColor, backColor)))
             {
                 System.IntPtr intPtr = bitmap.GetHicon();
                 try
@@ -56,7 +62,7 @@ namespace percentage
                     using (Icon icon = Icon.FromHandle(intPtr))
                     {
                         notifyIcon.Icon = icon;
-                        notifyIcon.Text = batteryPercentage + "%";
+                        notifyIcon.Text = (batteryCharging ? "Charging - " : "") + batteryPercentage + "%";
                     }
                 }
                 finally
@@ -99,6 +105,49 @@ namespace percentage
             using (Image image = new Bitmap(1, 1))
             using (Graphics graphics = Graphics.FromImage(image))
                 return graphics.MeasureString(text, font);
+        }
+
+        private Color GetFontColor(Color backColor)
+        {
+            var l = 0.2126 * backColor.R + 0.7152 * backColor.G + 0.0722 * backColor.B;
+
+            return l < 0.5 ? Color.White : Color.Black;
+        }
+
+
+
+        private Color GetBackColor(string batteryPercentage)
+        {
+            int batteryValue = Convert.ToInt32(batteryPercentage);
+            Color color = Color.Black;
+            var step = 255 / 50;
+
+            if (batteryValue >= 100) // verde
+            {
+                color = Color.FromArgb(0, 255, 0);
+            }
+            else if (batteryValue < 100 && batteryValue > 50) // scala dal verde al giallo per i valori tra 100 e 50
+            {
+                var value = Math.Abs((100 / 2) - batteryValue);
+                byte R = Convert.ToByte(255 - (value * step));
+                color = Color.FromArgb(R, 255, 0);
+            }
+            else if (batteryValue == 50) // giallo
+            {
+                color = Color.FromArgb(255, 255, 0);
+            }
+            else if (batteryValue < 50 && batteryValue > 0) // scala dal giallo al rosso per i valori tra 50 e 0
+            {
+                var value = Math.Abs((100 / 2) - batteryValue);
+                byte G = Convert.ToByte(255 - (value * step));
+                color = Color.FromArgb(255, G, 0);
+            }
+            else if (batteryValue == 0) // rosso
+            {
+                color = Color.FromArgb(255, 0, 0);
+            }
+
+            return color;
         }
     }
 }
