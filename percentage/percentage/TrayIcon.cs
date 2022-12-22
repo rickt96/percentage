@@ -115,39 +115,51 @@ namespace percentage
         }
 
 
-
+        /// <summary>
+        /// Applica la scala dal verde al rosso in base alla percentuale [2022-12-18]
+        /// </summary>
+        /// <param name="batteryPercentage"></param>
+        /// <returns></returns>
         private Color GetBackColor(string batteryPercentage)
         {
-            int batteryValue = Convert.ToInt32(batteryPercentage);
-            Color color = Color.Black;
-            var step = 255 / 50;
+            // https://stackoverflow.com/a/6394340
+            int percentage = Convert.ToInt32(batteryPercentage);
 
-            if (batteryValue >= 100) // verde
-            {
-                color = Color.FromArgb(0, 255, 0);
-            }
-            else if (batteryValue < 100 && batteryValue > 50) // scala dal verde al giallo per i valori tra 100 e 50
-            {
-                var value = Math.Abs((100 / 2) - batteryValue);
-                byte R = Convert.ToByte(255 - (value * step));
-                color = Color.FromArgb(R, 255, 0);
-            }
-            else if (batteryValue == 50) // giallo
-            {
-                color = Color.FromArgb(255, 255, 0);
-            }
-            else if (batteryValue < 50 && batteryValue > 0) // scala dal giallo al rosso per i valori tra 50 e 0
-            {
-                var value = Math.Abs((100 / 2) - batteryValue);
-                byte G = Convert.ToByte(255 - (value * step));
-                color = Color.FromArgb(255, G, 0);
-            }
-            else if (batteryValue == 0) // rosso
-            {
-                color = Color.FromArgb(255, 0, 0);
-            }
+            var red = (percentage > 50 ? 1 - 2 * (percentage - 50) / 100.0 : 1.0) * 255;
+            var green = (percentage > 50 ? 1.0 : 2 * percentage / 100.0) * 255;
+            var blue = 0.0;
+            Color result = Color.FromArgb((int)red, (int)green, (int)blue);
 
-            return color;
+            return result;
+
+            //Color color = Color.Black;
+            //var step = 255 / 50;
+
+            //if (batteryValue >= 100) // verde
+            //{
+            //    color = Color.FromArgb(0, 255, 0);
+            //}
+            //else if (batteryValue < 100 && batteryValue > 50) // scala dal verde al giallo per i valori tra 100 e 50
+            //{
+            //    var value = Math.Abs((100 / 2) - batteryValue);
+            //    byte R = Convert.ToByte(255 - (value * step));
+            //    color = Color.FromArgb(R, 255, 0);
+            //}
+            //else if (batteryValue == 50) // giallo
+            //{
+            //    color = Color.FromArgb(255, 255, 0);
+            //}
+            //else if (batteryValue < 50 && batteryValue > 0) // scala dal giallo al rosso per i valori tra 50 e 0
+            //{
+            //    var value = Math.Abs((100 / 2) - batteryValue);
+            //    byte G = Convert.ToByte(255 - (value * step));
+            //    color = Color.FromArgb(255, G, 0);
+            //}
+            //else if (batteryValue == 0) // rosso
+            //{
+            //    color = Color.FromArgb(255, 0, 0);
+            //}
+            //return color;
         }
     }
 }
